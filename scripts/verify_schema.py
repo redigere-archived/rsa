@@ -96,6 +96,3 @@ def verify_schema(password):
 
     cur.close()
     conn.close()
-
-if __name__ == "__main__":
-    verify_schema(sys.argv[1])

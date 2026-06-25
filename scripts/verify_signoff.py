@@ -43,6 +43,3 @@ def verify_signoff():
         sys.exit(1)
 
     log.info("STATO OK")
-
-if __name__ == "__main__":
-    verify_signoff()

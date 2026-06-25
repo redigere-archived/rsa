@@ -1,4 +1,3 @@
-import sys
 import logging
 import oracledb
 
@@ -52,6 +51,3 @@ def generate_report(password):
     log.info("STATO COMPLETATO")
     cur.close()
     conn.close()
-
-if __name__ == "__main__":
-    generate_report(sys.argv[1])

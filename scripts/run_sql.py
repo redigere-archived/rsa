@@ -1,5 +1,4 @@
 import re
-import sys
 import logging
 import oracledb
 
@@ -62,6 +61,3 @@ def execute_sql(password, sql_file):
 
     cur.close()
     conn.close()
-
-if __name__ == "__main__":
-    execute_sql(sys.argv[1], sys.argv[2])
