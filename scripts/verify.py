@@ -41,6 +41,3 @@ def verify_records(password):
 
     cur.close()
     conn.close()
-
-if __name__ == "__main__":
-    verify_records(sys.argv[1])

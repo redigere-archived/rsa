@@ -32,6 +32,3 @@ def wait_for_oracle(password):
 
     log.error("TIMEOUT dopo 10 minuti")
     sys.exit(1)
-
-if __name__ == "__main__":
-    wait_for_oracle(sys.argv[1])
