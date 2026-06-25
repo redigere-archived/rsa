@@ -26,10 +26,7 @@ jobs:
           fetch-depth: 0
 
       - name: Check signoff
-        run: |
-          LAST_MSG=$(git log -1 --pretty=format:"%s")
-          if echo "$LAST_MSG" | grep -q "^log:"; then exit 0; fi
-          bash scripts/verify_signoff.sh
+        run: python3 src/main.py signoff
 
       - name: Start Oracle
         run: docker run -d --name oracle-xe -e ORACLE_PASSWORD=${{ env.ORACLE_PWD }} -p 1521:1521 gvenzl/oracle-free:23-slim
@@ -38,31 +35,28 @@ jobs:
         run: pip install oracledb
 
       - name: Wait for Oracle
-        run: |
-          python3 src/wait_oracle.py "${{ env.ORACLE_PWD }}" && exit 0
-          docker logs oracle-xe
-          exit 1
+        run: python3 src/main.py wait "${{ env.ORACLE_PWD }}"
 
       - name: Execute DDL
-        run: python3 src/run_sql.py "${{ env.ORACLE_PWD }}" db/01_ddl.sql > /dev/null 2>&1
+        run: python3 src/main.py run "${{ env.ORACLE_PWD }}" db/01_ddl.sql > /dev/null 2>&1
 
       - name: Execute DML
-        run: python3 src/run_sql.py "${{ env.ORACLE_PWD }}" db/02_dml.sql > /dev/null 2>&1
+        run: python3 src/main.py run "${{ env.ORACLE_PWD }}" db/02_dml.sql > /dev/null 2>&1
 
       - name: Execute Functions
-        run: python3 src/run_sql.py "${{ env.ORACLE_PWD }}" db/03_functions.sql > /dev/null 2>&1
+        run: python3 src/main.py run "${{ env.ORACLE_PWD }}" db/03_functions.sql > /dev/null 2>&1
 
       - name: Execute Triggers
-        run: python3 src/run_sql.py "${{ env.ORACLE_PWD }}" db/04_triggers.sql > /dev/null 2>&1
+        run: python3 src/main.py run "${{ env.ORACLE_PWD }}" db/04_triggers.sql > /dev/null 2>&1
 
       - name: Verify records
-        run: python3 src/verify.py "${{ env.ORACLE_PWD }}" > log/05_verify.log 2>&1 || true
+        run: python3 src/main.py verify "${{ env.ORACLE_PWD }}" > log/05_verify.log 2>&1 || true
 
       - name: Verify schema
-        run: python3 src/verify_schema.py "${{ env.ORACLE_PWD }}" > log/06_schema.log 2>&1 || true
+        run: python3 src/main.py schema "${{ env.ORACLE_PWD }}" > log/06_schema.log 2>&1 || true
 
       - name: Report
-        run: python3 src/report.py "${{ env.ORACLE_PWD }}" > log/07_report.log 2>&1 || true
+        run: python3 src/main.py report "${{ env.ORACLE_PWD }}" > log/07_report.log 2>&1 || true
 
       - name: Commit logs
         run: |
