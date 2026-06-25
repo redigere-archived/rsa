@@ -1,12 +1,15 @@
 import sys
+import logging
 import oracledb
+
+logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
+log = logging.getLogger(__name__)
 
 def verify_schema(password):
     conn = oracledb.connect(user="system", password=password, dsn="localhost:1521/FREEPDB1")
     cur = conn.cursor()
 
-    print("[SCHEMA] INIZIO VERIFICA STRUTTURA")
-    print()
+    log.info("INIZIO VERIFICA STRUTTURA")
 
     expected_tables = {
         "PERSONA": {"CODICE_FISCALE": "VARCHAR2", "NOME": "VARCHAR2", "COGNOME": "VARCHAR2", "DATA_NASCITA": "DATE"},
@@ -49,8 +52,8 @@ def verify_schema(password):
 
     for table_name in sorted(expected_tables.keys()):
         if table_name not in existing_tables:
-            errors.append(f"TABELLA MANCANTE: {table_name}")
-            print(f"[SCHEMA] {table_name}: MANCANTE")
+            errors.append(f"TABELLA MANCANTE {table_name}")
+            log.error(f"{table_name} MANCANTE")
             continue
 
         cur.execute(f"SELECT COLUMN_NAME, DATA_TYPE FROM ALL_TAB_COLUMNS WHERE TABLE_NAME = '{table_name}' AND OWNER = 'SYSTEM'")
@@ -58,40 +61,38 @@ def verify_schema(password):
 
         for col_name, col_type in expected_tables[table_name].items():
             if col_name not in columns:
-                errors.append(f"COLUMN MANCANTE: {table_name}.{col_name}")
-                print(f"[SCHEMA] {table_name}.{col_name}: MANCANTE")
+                errors.append(f"COLUMN MANCANTE {table_name}.{col_name}")
+                log.error(f"{table_name}.{col_name} MANCANTE")
             elif not columns[col_name].startswith(col_type):
-                errors.append(f"TIPO ERRATO: {table_name}.{col_name} atteso {col_type} trovato {columns[col_name]}")
-                print(f"[SCHEMA] {table_name}.{col_name}: TIPO ERRATO ({columns[col_name]})")
+                errors.append(f"TIPO ERRATO {table_name}.{col_name} atteso {col_type} trovato {columns[col_name]}")
+                log.error(f"{table_name}.{col_name} TIPO ERRATO {columns[col_name]}")
 
         cur.execute(f"SELECT COUNT(*) FROM {table_name}")
         count = cur.fetchone()[0]
         if count == 0:
-            print(f"[SCHEMA] {table_name}: TABELLA VUOTA")
+            log.warning(f"{table_name} TABELLA VUOTA")
         else:
-            print(f"[SCHEMA] {table_name}: OK ({count} record)")
+            log.info(f"{table_name} OK {count} record")
 
-    print()
     cur.execute("SELECT COUNT(*) FROM USER_TRIGGERS WHERE TRIGGER_NAME LIKE 'TRG_%'")
     trg_count = cur.fetchone()[0]
-    print(f"[SCHEMA] TRIGGER TROVATI: {trg_count}")
+    log.info(f"TRIGGER TROVATI {trg_count}")
 
     cur.execute("SELECT COUNT(*) FROM USER_OBJECTS WHERE OBJECT_TYPE = 'FUNCTION' AND (OBJECT_NAME LIKE 'CALCOLA%' OR OBJECT_NAME LIKE 'CONTEGGIO%' OR OBJECT_NAME LIKE 'VERIFICA%' OR OBJECT_NAME LIKE 'DESCRIZIONE%')")
     fn_count = cur.fetchone()[0]
-    print(f"[SCHEMA] FUNZIONI TROVATE: {fn_count}")
+    log.info(f"FUNZIONI TROVATE {fn_count}")
 
     cur.execute("SELECT COUNT(*) FROM USER_CONSTRAINTS WHERE CONSTRAINT_TYPE IN ('P','R') AND TABLE_NAME NOT LIKE 'SYS_%' AND TABLE_NAME NOT LIKE 'AQ_%' AND TABLE_NAME NOT LIKE 'HELP%' AND TABLE_NAME NOT LIKE 'BIN_%' AND TABLE_NAME NOT LIKE 'MVIEW%'")
     cst_count = cur.fetchone()[0]
-    print(f"[SCHEMA] VINCOLI PK/FK: {cst_count}")
+    log.info(f"VINCOLI PK/FK {cst_count}")
 
-    print()
     if errors:
-        print(f"[SCHEMA] STATO: ERRORE ({len(errors)} problemi)")
+        log.error(f"STATO ERRORE {len(errors)} problemi")
         for e in errors:
-            print(f"[SCHEMA]   {e}")
+            log.error(f"  {e}")
         sys.exit(1)
     else:
-        print(f"[SCHEMA] STATO: OK (tabelle: {len(expected_tables)}, trigger: {trg_count}, funzioni: {fn_count}, vincoli: {cst_count})")
+        log.info(f"STATO OK tabelle {len(expected_tables)} trigger {trg_count} funzioni {fn_count} vincoli {cst_count}")
 
     cur.close()
     conn.close()

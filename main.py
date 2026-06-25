@@ -1,18 +1,19 @@
 import sys
+import logging
+
+logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
 def print_usage():
-    print("RSA Database Manager")
-    print()
-    print("Uso: python3 src/main.py <comando> [argomenti]")
-    print()
-    print("Comandi:")
-    print("  run <password> <file.sql>     Esegui file SQL")
-    print("  wait <password>               Attendi Oracle XE")
-    print("  verify <password>             Verifica record")
-    print("  schema <password>             Verifica struttura")
-    print("  report <password>             Genera report")
-    print("  signoff                       Verifica signoff git")
-    print("  all <password>                Esegui tutto (DDL DML Functions Triggers Verify Report)")
+    log.info("RSA Database Manager")
+    log.info("Uso: python3 main.py <comando> [argomenti]")
+    log.info("Comandi:")
+    log.info("  run <password> <file.sql>     Esegui file SQL")
+    log.info("  wait <password>               Attendi Oracle XE")
+    log.info("  verify <password>             Verifica record")
+    log.info("  schema <password>             Verifica struttura")
+    log.info("  report <password>             Genera report")
+    log.info("  signoff                       Verifica signoff git")
+    log.info("  all <password>                Esegui tutto")
 
 def run_all(password):
     from run_sql import execute_sql
@@ -28,24 +29,10 @@ def run_all(password):
     ]
 
     for name, sql_file in steps:
-        print(f"\n{'=' * 50}")
-        print(f"  {name}")
-        print(f"{'=' * 50}")
         execute_sql(password, sql_file)
 
-    print(f"\n{'=' * 50}")
-    print(f"  Verify Records")
-    print(f"{'=' * 50}")
     verify_records(password)
-
-    print(f"\n{'=' * 50}")
-    print(f"  Verify Schema")
-    print(f"{'=' * 50}")
     verify_schema(password)
-
-    print(f"\n{'=' * 50}")
-    print(f"  Report")
-    print(f"{'=' * 50}")
     generate_report(password)
 
 if __name__ == "__main__":
@@ -76,6 +63,6 @@ if __name__ == "__main__":
     elif command == "all":
         run_all(sys.argv[2])
     else:
-        print(f"Comando sconosciuto: {command}")
+        log.error(f"Comando sconosciuto {command}")
         print_usage()
         sys.exit(1)

@@ -1,5 +1,9 @@
 import subprocess
 import sys
+import logging
+
+logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
+log = logging.getLogger(__name__)
 
 def verify_signoff():
     result = subprocess.run(
@@ -9,7 +13,7 @@ def verify_signoff():
     last_msg = result.stdout.strip()
 
     if last_msg.startswith("log:"):
-        print("[SIGNOFF] Skip per commit log")
+        log.info("Skip per commit log")
         sys.exit(0)
 
     result = subprocess.run(
@@ -31,14 +35,14 @@ def verify_signoff():
                 ["git", "log", "-1", "--pretty=format:%s", sha],
                 capture_output=True, text=True
             ).stdout.strip()
-            print(f"[SIGNOFF] MANCANTE: {sha[:8]} {subject}")
+            log.error(f"MANCANTE {sha[:8]} {subject}")
             failed += 1
 
     if failed:
-        print(f"[SIGNOFF] STATO: ERRORE ({failed} commit senza signoff)")
+        log.error(f"STATO ERRORE {failed} commit senza signoff")
         sys.exit(1)
 
-    print("[SIGNOFF] STATO: OK")
+    log.info("STATO OK")
 
 if __name__ == "__main__":
     verify_signoff()

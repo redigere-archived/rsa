@@ -1,12 +1,15 @@
 import sys
+import logging
 import oracledb
+
+logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
+log = logging.getLogger(__name__)
 
 def verify_records(password):
     conn = oracledb.connect(user="system", password=password, dsn="localhost:1521/FREEPDB1")
     cur = conn.cursor()
 
-    print("[RECORD] INIZIO VERIFICA DATI")
-    print()
+    log.info("INIZIO VERIFICA DATI")
 
     tables = [
         "PERSONA","PERSONALE","PARENTE","TUTORE","OPERATORE","CONTRATTO",
@@ -26,16 +29,15 @@ def verify_records(password):
         total += count
         if count == 0:
             empty.append(t)
-            print(f"[RECORD] {t:<30} VUOTA")
+            log.warning(f"{t} VUOTA")
         else:
-            print(f"[RECORD] {t:<30} {count:>4} record")
+            log.info(f"{t} {count} record")
 
-    print()
-    print(f"[RECORD] Tabelle: {len(tables)} | Record totali: {total} | Vuote: {len(empty)}")
+    log.info(f"Tabelle {len(tables)} Record totali {total} Vuote {len(empty)}")
     if empty:
-        print(f"[RECORD] STATO: ERRORE ({', '.join(empty)} vuote)")
+        log.error(f"STATO ERRORE {', '.join(empty)} vuote")
         sys.exit(1)
-    print("[RECORD] STATO: OK")
+    log.info("STATO OK")
 
     cur.close()
     conn.close()

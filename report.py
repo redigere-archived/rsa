@@ -1,12 +1,15 @@
 import sys
+import logging
 import oracledb
+
+logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
+log = logging.getLogger(__name__)
 
 def generate_report(password):
     conn = oracledb.connect(user="system", password=password, dsn="localhost:1521/FREEPDB1")
     cur = conn.cursor()
 
-    print("[REPORT] RSA - REPORT DATABASE")
-    print()
+    log.info("RSA REPORT DATABASE")
 
     tables = [
         "PERSONA","PERSONALE","PARENTE","TUTORE","OPERATORE","CONTRATTO",
@@ -18,19 +21,13 @@ def generate_report(password):
         "RICEVE","EFFETTUA"
     ]
     total = 0
-    print("[REPORT] TABELLE")
-    print("-" * 40)
     for t in tables:
         cur.execute(f"SELECT COUNT(*) FROM {t}")
         count = cur.fetchone()[0]
         total += count
-        print(f"  {t:<30} {count:>4}")
-    print("-" * 40)
-    print(f"  {'TOTALE':<30} {total:>4}")
-    print()
+        log.info(f"{t} {count}")
+    log.info(f"TOTALE {total}")
 
-    print("[REPORT] FUNZIONI")
-    print("-" * 50)
     funcs = [
         ("ETA RESIDENTI", "SELECT P.NOME, P.COGNOME, CALCOLA_ETA(R.CODICE_FISCALE) FROM RESIDENTE R JOIN PERSONA P ON R.CODICE_FISCALE = P.CODICE_FISCALE"),
         ("CAMERE LIBERE", "SELECT NOME_REPARTO, CONTEGGIO_CAMERE_LIBERE(CODICE_REPARTO) FROM REPARTO"),
@@ -41,47 +38,18 @@ def generate_report(password):
         ("NUMERO VISITE", "SELECT P.NOME, P.COGNOME, CONTEGGIO_VISITE_RESIDENTE(R.CODICE_FISCALE, TO_DATE('2025-01-01','YYYY-MM-DD'), TO_DATE('2025-12-31','YYYY-MM-DD')) FROM RESIDENTE R JOIN PERSONA P ON R.CODICE_FISCALE = P.CODICE_FISCALE"),
     ]
     for title, sql in funcs:
-        print(f"\n  {title}")
         try:
             cur.execute(sql)
-            cols = [d[0] for d in cur.description]
-            print("  " + "  ".join(f"{c:<22}" for c in cols))
             for row in cur.fetchall():
-                print("  " + "  ".join(f"{str(v):<22}" for v in row))
+                log.info(f"{title} {row}")
         except Exception as e:
-            print(f"  Errore: {e}")
-    print()
+            log.error(f"{title} Errore {e}")
 
-    print("[REPORT] TRIGGER")
-    print("-" * 70)
-    cur.execute("""
-      SELECT TRIGGER_NAME, TABLE_NAME, STATUS
-      FROM USER_TRIGGERS
-      WHERE TRIGGER_NAME LIKE 'TRG_%'
-      ORDER BY TABLE_NAME, TRIGGER_NAME
-    """)
+    cur.execute("SELECT TRIGGER_NAME, TABLE_NAME, STATUS FROM USER_TRIGGERS WHERE TRIGGER_NAME LIKE 'TRG_%' ORDER BY TABLE_NAME")
     for name, table, status in cur.fetchall():
-        print(f"  {name:<45} {table:<15} {status}")
-    print()
+        log.info(f"TRIGGER {name} {table} {status}")
 
-    print("[REPORT] VINCOLI PK/FK")
-    print("-" * 70)
-    cur.execute("""
-      SELECT CONSTRAINT_NAME, TABLE_NAME, CONSTRAINT_TYPE
-      FROM USER_CONSTRAINTS
-      WHERE CONSTRAINT_TYPE IN ('P','R')
-        AND TABLE_NAME NOT LIKE 'SYS_%'
-        AND TABLE_NAME NOT LIKE 'AQ_%'
-        AND TABLE_NAME NOT LIKE 'HELP%'
-        AND TABLE_NAME NOT LIKE 'BIN_%'
-        AND TABLE_NAME NOT LIKE 'MVIEW%'
-      ORDER BY TABLE_NAME, CONSTRAINT_TYPE
-    """)
-    for name, table, ctype in cur.fetchall():
-        tipo = "PK" if ctype == "P" else "FK"
-        print(f"  {tipo} {name:<45} {table}")
-    print()
-    print("[REPORT] STATO: COMPLETATO")
+    log.info("STATO COMPLETATO")
     cur.close()
     conn.close()
 
