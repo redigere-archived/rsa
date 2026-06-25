@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: functions-${{ github.ref }}
   cancel-in-progress: false
 
 permissions:
