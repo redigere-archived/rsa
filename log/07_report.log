@@ -1,183 +1,75 @@
-[REPORT] RSA - REPORT DATABASE
-
-[REPORT] TABELLE
-----------------------------------------
-  PERSONA                          12
-  PERSONALE                         6
-  PARENTE                           3
-  TUTORE                            2
-  OPERATORE                         2
-  CONTRATTO                         4
-  MEDICO                            3
-  REPARTO                           3
-  CAMERA                            5
-  RESIDENTE                         5
-  MALATTIA                          4
-  FARMACO                           5
-  TRATTAMENTO                       4
-  SOFFRE                            5
-  ASSUME                            5
-  PAI                               4
-  NECESSITA                         4
-  AZIENDA_ESTERNA                   5
-  DITTA                             3
-  FORNITORE                         2
-  DITTA_PULIZIA                     2
-  DITTA_RISTORANTE                  1
-  FORNISCE                          4
-  PULISCE                           4
-  DOCUMENTO                         3
-  ENTE                              3
-  PRENOTAZIONE                      3
-  TURNO_PROGRAMMATO                 4
-  TURNO_EFFETTUATO                  3
-  VISITA                            3
-  CONSULENZA                        3
-  RICEVE                            3
-  EFFETTUA                          3
-----------------------------------------
-  TOTALE                          125
-
-[REPORT] FUNZIONI
---------------------------------------------------
-
-  ETA RESIDENTI
-  NOME                    COGNOME                 CALCOLA_ETA(R.CODICE_FISCALE)
-  Giovanni                Verdi                   86                    
-  Mario                   Pellegrini              91                    
-  Anna                    Ferrari                 84                    
-  Luigi                   Natalini                75                    
-  Luisa                   Rossi                   88                    
-
-  CAMERE LIBERE
-  NOME_REPARTO            CONTEGGIO_CAMERE_LIBERE(CODICE_REPARTO)
-  Geriatria               0                     
-  Cardiologia             0                     
-  Neurologia              0                     
-
-  FARMACI ASSEGNATI
-  NOME                    COGNOME                 CONTEGGIO_FARMACI_ASSEGNATI(R.CODICE_FISCALE)
-  Giovanni                Verdi                   1                     
-  Mario                   Pellegrini              1                     
-  Anna                    Ferrari                 1                     
-  Luigi                   Natalini                1                     
-  Luisa                   Rossi                   1                     
-
-  STIPENDIO MESE
-  NOME                    COGNOME                 CALCOLA_STIPENDIO_MENSILE(P.CODICE_FISCALE)
-  Marco                   Rossi                   4080                  
-  Laura                   Bianchi                 3520                  
-  Giuseppe                Colombo                 4600                  
-  Angela                  Montanari               3200                  
-  Marco                   Davoli                  0                     
-  Serena                  Greco                   0                     
-
-  PAI ATTIVI
-  NOME                    COGNOME                 VERIFICA_PAI_ATTIVO(R.CODICE_FISCALE)
-  Giovanni                Verdi                   ATTIVO                
-  Mario                   Pellegrini              ATTIVO                
-  Anna                    Ferrari                 ATTIVO                
-  Luigi                   Natalini                NESSUN PAI            
-  Luisa                   Rossi                   ATTIVO                
-
-  ESITO TRATTAMENTI
-  CODICE_TRATTAMENTO      DESCRIZIONE_ESITO_TRATTAMENTO(CODICE_TRATTAMENTO)
-  TRAT001                 RAGGIUNTO: Miglioramento cognitivo documentato
-  TRAT002                 IN CORSO              
-  TRAT003                 RAGGIUNTO: Glicemia stabilizzata
-  TRAT004                 IN CORSO              
-
-  NUMERO VISITE
-  NOME                    COGNOME                 CONTEGGIO_VISITE_RESIDENTE(R.CODICE_FISCALE,TO_DATE('2025-01-01','YYYY-MM-DD'),TO_DATE('2025-12-31','YYYY-MM-DD'))
-  Giovanni                Verdi                   1                     
-  Mario                   Pellegrini              1                     
-  Anna                    Ferrari                 1                     
-  Luigi                   Natalini                0                     
-  Luisa                   Rossi                   0                     
-
-[REPORT] TRIGGER
-----------------------------------------------------------------------
-  TRG_VALIDA_INSERIMENTO_PAI_TRATTAMENTO        NECESSITA       ENABLED
-  TRG_AGGIORNA_DATA_REVISIONE_PAI               PAI             ENABLED
-  TRG_DIMISSIONE_AUTOMATICA_RESIDENTE           PAI             ENABLED
-  TRG_IMPEDISCI_MODIFICA_CF_PERSONA             PERSONA         ENABLED
-  TRG_CONTROLLO_DISPONIBILITA_CAMERA            RESIDENTE       ENABLED
-  TRG_IMPEDISCI_MODIFICA_CF_RESIDENTE           RESIDENTE       ENABLED
-  TRG_VALIDA_ORARI_TURNO                        TURNO_PROGRAMMATO ENABLED
-  TRG_VALIDA_ORARI_VISITA                       VISITA          ENABLED
-
-[REPORT] VINCOLI PK/FK
-----------------------------------------------------------------------
-  PK PK_ASSUME                                     ASSUME
-  FK FK_ASSUME_FARMACO                             ASSUME
-  FK FK_ASSUME_RESIDENTE                           ASSUME
-  PK PK_AZIENDA_ESTERNA                            AZIENDA_ESTERNA
-  FK FK_AZIENDA_ESTERNA_OPERATORE                  AZIENDA_ESTERNA
-  PK PK_CAMERA                                     CAMERA
-  FK FK_CAMERA_REPARTO                             CAMERA
-  PK PK_CONSULENZA                                 CONSULENZA
-  PK PK_CONTRATTO                                  CONTRATTO
-  FK FK_CONTRATTO_PERSONALE                        CONTRATTO
-  PK PK_DITTA                                      DITTA
-  FK FK_DITTA_AZIENDA_ESTERNA                      DITTA
-  PK PK_DITTA_PULIZIA                              DITTA_PULIZIA
-  FK FK_DITTA_PULIZIA_DITTA                        DITTA_PULIZIA
-  PK PK_DITTA_RISTORANTE                           DITTA_RISTORANTE
-  FK FK_DITTA_RISTORANTE_DITTA                     DITTA_RISTORANTE
-  PK PK_DOCUMENTO                                  DOCUMENTO
-  FK FK_DOCUMENTO_DITTA_RISTORANTE                 DOCUMENTO
-  PK PK_EFFETTUA                                   EFFETTUA
-  FK FK_EFFETTUA_CONSULENZA                        EFFETTUA
-  FK FK_EFFETTUA_MEDICO                            EFFETTUA
-  PK PK_ENTE                                       ENTE
-  PK PK_FARMACO                                    FARMACO
-  PK PK_FORNISCE                                   FORNISCE
-  FK FK_FORNISCE_CAMERA                            FORNISCE
-  FK FK_FORNISCE_FORNITORE                         FORNISCE
-  PK PK_FORNITORE                                  FORNITORE
-  FK FK_FORNITORE_AZIENDA_ESTERNA                  FORNITORE
-  PK PK_MALATTIA                                   MALATTIA
-  PK PK_MEDICO                                     MEDICO
-  FK FK_MEDICO_PERSONALE                           MEDICO
-  FK FK_MEDICO_CONTRATTO                           MEDICO
-  PK PK_NECESSITA                                  NECESSITA
-  FK FK_NECESSITA_PAI                              NECESSITA
-  FK FK_NECESSITA_TRATTAMENTO                      NECESSITA
-  PK PK_OPERATORE                                  OPERATORE
-  FK FK_OPERATORE_PERSONALE                        OPERATORE
-  PK PK_PAI                                        PAI
-  FK FK_PAI_RESIDENTE                              PAI
-  PK PK_PARENTE                                    PARENTE
-  FK FK_PARENTE_PERSONA                            PARENTE
-  PK PK_PERSONA                                    PERSONA
-  PK PK_PERSONALE                                  PERSONALE
-  FK FK_PERSONALE_PERSONA                          PERSONALE
-  PK PK_PRENOTAZIONE                               PRENOTAZIONE
-  FK FK_PRENOTAZIONE_TUTORE                        PRENOTAZIONE
-  FK FK_PRENOTAZIONE_CAMERA                        PRENOTAZIONE
-  PK PK_PULISCE                                    PULISCE
-  FK FK_PULISCE_CAMERA                             PULISCE
-  FK FK_PULISCE_DITTA_PULIZIA                      PULISCE
-  PK PK_REPARTO                                    REPARTO
-  FK FK_REPARTO_MEDICO                             REPARTO
-  PK PK_RESIDENTE                                  RESIDENTE
-  FK FK_RESIDENTE_CAMERA                           RESIDENTE
-  FK FK_RESIDENTE_PERSONA                          RESIDENTE
-  PK PK_RICEVE                                     RICEVE
-  FK FK_RICEVE_RESIDENTE                           RICEVE
-  FK FK_RICEVE_CONSULENZA                          RICEVE
-  PK PK_SOFFRE                                     SOFFRE
-  FK FK_SOFFRE_MALATTIA                            SOFFRE
-  FK FK_SOFFRE_RESIDENTE                           SOFFRE
-  PK PK_TRATTAMENTO                                TRATTAMENTO
-  PK PK_TURNO_EFFETTUATO                           TURNO_EFFETTUATO
-  FK FK_TURNO_EFF_TURNO_PROG                       TURNO_EFFETTUATO
-  PK PK_TURNO_PROGRAMMATO                          TURNO_PROGRAMMATO
-  FK FK_TURNO_PROG_PERSONALE                       TURNO_PROGRAMMATO
-  PK PK_TUTORE                                     TUTORE
-  FK FK_TUTORE_PERSONA                             TUTORE
-  PK PK_VISITA                                     VISITA
-  FK FK_VISITA_PARENTE                             VISITA
-  FK FK_VISITA_RESIDENTE                           VISITA
-
-[REPORT] STATO: COMPLETATO
+[INFO] RSA REPORT DATABASE
+[INFO] PERSONA 12
+[INFO] PERSONALE 6
+[INFO] PARENTE 3
+[INFO] TUTORE 2
+[INFO] OPERATORE 2
+[INFO] CONTRATTO 4
+[INFO] MEDICO 3
+[INFO] REPARTO 3
+[INFO] CAMERA 5
+[INFO] RESIDENTE 5
+[INFO] MALATTIA 4
+[INFO] FARMACO 5
+[INFO] TRATTAMENTO 4
+[INFO] SOFFRE 5
+[INFO] ASSUME 5
+[INFO] PAI 4
+[INFO] NECESSITA 4
+[INFO] AZIENDA_ESTERNA 3
+[INFO] DITTA_PULIZIA 1
+[INFO] DITTA_RISTORANTE 1
+[INFO] FORNISCE 3
+[INFO] PULISCE 4
+[INFO] DOCUMENTO 3
+[INFO] ENTE 3
+[INFO] PRENOTAZIONE 3
+[INFO] TURNO_PROGRAMMATO 4
+[INFO] TURNO_EFFETTUATO 3
+[INFO] VISITA 3
+[INFO] CONSULENZA 3
+[INFO] RICEVE 3
+[INFO] EFFETTUA 3
+[INFO] TOTALE 116
+[INFO] ETA RESIDENTI ('Giovanni', 'Verdi', 86)
+[INFO] ETA RESIDENTI ('Mario', 'Pellegrini', 91)
+[INFO] ETA RESIDENTI ('Anna', 'Ferrari', 84)
+[INFO] ETA RESIDENTI ('Luigi', 'Natalini', 75)
+[INFO] ETA RESIDENTI ('Luisa', 'Rossi', 88)
+[INFO] CAMERE LIBERE ('Geriatria', 0)
+[INFO] CAMERE LIBERE ('Cardiologia', 0)
+[INFO] CAMERE LIBERE ('Neurologia', 0)
+[INFO] FARMACI ASSEGNATI ('Giovanni', 'Verdi', 1)
+[INFO] FARMACI ASSEGNATI ('Mario', 'Pellegrini', 1)
+[INFO] FARMACI ASSEGNATI ('Anna', 'Ferrari', 1)
+[INFO] FARMACI ASSEGNATI ('Luigi', 'Natalini', 1)
+[INFO] FARMACI ASSEGNATI ('Luisa', 'Rossi', 1)
+[INFO] STIPENDIO MESE ('Marco', 'Rossi', 4080)
+[INFO] STIPENDIO MESE ('Laura', 'Bianchi', 3520)
+[INFO] STIPENDIO MESE ('Giuseppe', 'Colombo', 4600)
+[INFO] STIPENDIO MESE ('Angela', 'Montanari', 3200)
+[INFO] STIPENDIO MESE ('Marco', 'Davoli', 0)
+[INFO] STIPENDIO MESE ('Serena', 'Greco', 0)
+[INFO] PAI ATTIVI ('Giovanni', 'Verdi', 'ATTIVO')
+[INFO] PAI ATTIVI ('Mario', 'Pellegrini', 'ATTIVO')
+[INFO] PAI ATTIVI ('Anna', 'Ferrari', 'ATTIVO')
+[INFO] PAI ATTIVI ('Luigi', 'Natalini', 'NESSUN PAI')
+[INFO] PAI ATTIVI ('Luisa', 'Rossi', 'ATTIVO')
+[INFO] ESITO TRATTAMENTI ('TRA01', 'RAGGIUNTO: Miglioramento cognitivo documentato')
+[INFO] ESITO TRATTAMENTI ('TRA02', 'IN CORSO')
+[INFO] ESITO TRATTAMENTI ('TRA03', 'RAGGIUNTO: Glicemia stabilizzata')
+[INFO] ESITO TRATTAMENTI ('TRA04', 'IN CORSO')
+[INFO] NUMERO VISITE ('Giovanni', 'Verdi', 1)
+[INFO] NUMERO VISITE ('Mario', 'Pellegrini', 1)
+[INFO] NUMERO VISITE ('Anna', 'Ferrari', 1)
+[INFO] NUMERO VISITE ('Luigi', 'Natalini', 0)
+[INFO] NUMERO VISITE ('Luisa', 'Rossi', 0)
+[INFO] TRIGGER TRG_VALIDA_INSERIMENTO_PAI_TRATTAMENTO NECESSITA ENABLED
+[INFO] TRIGGER TRG_AGGIORNA_DATA_REVISIONE_PAI PAI ENABLED
+[INFO] TRIGGER TRG_DIMISSIONE_AUTOMATICA_RESIDENTE PAI ENABLED
+[INFO] TRIGGER TRG_IMPEDISCI_MODIFICA_CF_PERSONA PERSONA ENABLED
+[INFO] TRIGGER TRG_IMPEDISCI_MODIFICA_CF_RESIDENTE RESIDENTE ENABLED
+[INFO] TRIGGER TRG_CONTROLLO_DISPONIBILITA_CAMERA RESIDENTE ENABLED
+[INFO] TRIGGER TRG_VALIDA_ORARI_TURNO TURNO_PROGRAMMATO ENABLED
+[INFO] TRIGGER TRG_VALIDA_ORARI_VISITA VISITA ENABLED
+[INFO] STATO COMPLETATO
