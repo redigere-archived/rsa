@@ -1,4 +1,4 @@
-[01_ddl.sql] INIZIO
-[01_ddl.sql] Connessione: OK
-[01_ddl.sql] COMMIT: transazione completata
-[01_ddl.sql] STATO: OK (66 statement eseguiti)
+[INFO] 01_ddl.sql INIZIO
+[INFO] 01_ddl.sql Connessione OK
+[INFO] 01_ddl.sql COMMIT transazione completata
+[INFO] 01_ddl.sql STATO OK 62 statement
