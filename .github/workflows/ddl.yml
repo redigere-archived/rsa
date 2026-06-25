@@ -26,7 +26,7 @@ jobs:
           fetch-depth: 0
 
       - name: Check signoff
-        run: python3 main.py signoff
+        run: python3 scripts/main.py signoff
 
       - name: Start Oracle
         run: docker run -d --name oracle-xe -e ORACLE_PASSWORD=${{ env.ORACLE_PWD }} -p 1521:1521 gvenzl/oracle-free:23-slim
@@ -35,10 +35,10 @@ jobs:
         run: pip install oracledb
 
       - name: Wait for Oracle
-        run: python3 main.py wait "${{ env.ORACLE_PWD }}"
+        run: python3 scripts/main.py wait "${{ env.ORACLE_PWD }}"
 
       - name: Execute DDL
-        run: python3 main.py run "${{ env.ORACLE_PWD }}" db/01_ddl.sql > log/01_ddl.log 2>&1 || true
+        run: python3 scripts/main.py run "${{ env.ORACLE_PWD }}" db/01_ddl.sql > log/01_ddl.log 2>&1 || true
 
       - name: Commit logs
         run: |
