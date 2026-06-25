@@ -1,6 +1,10 @@
 import re
 import sys
+import logging
 import oracledb
+
+logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
+log = logging.getLogger(__name__)
 
 def execute_sql(password, sql_file):
     conn = oracledb.connect(user="system", password=password, dsn="localhost:1521/FREEPDB1")
@@ -10,8 +14,8 @@ def execute_sql(password, sql_file):
         sql = f.read()
 
     basename = sql_file.split("/")[-1]
-    print(f"[{basename}] INIZIO")
-    print(f"[{basename}] Connessione: OK")
+    log.info(f"{basename} INIZIO")
+    log.info(f"{basename} Connessione OK")
 
     ok = 0
     fail = 0
@@ -28,10 +32,10 @@ def execute_sql(password, sql_file):
             try:
                 cur.execute(s)
                 ok += 1
-                print(f"[{basename}] {obj_type} {obj_name} CREATO")
+                log.info(f"{basename} {obj_type} {obj_name} CREATO")
             except oracledb.Error as e:
                 fail += 1
-                print(f"[{basename}] {obj_type} {obj_name} ERRORE: {e}")
+                log.error(f"{basename} {obj_type} {obj_name} ERRORE: {e}")
         else:
             stmts = [x.strip() for x in s.split(";") if x.strip()]
             for stmt in stmts:
@@ -45,16 +49,16 @@ def execute_sql(password, sql_file):
                     else:
                         fail += 1
                         first_line = stmt.split("\n")[0][:80]
-                        print(f"[{basename}] ERRORE: {first_line} -> {e}")
+                        log.error(f"{basename} ERRORE: {first_line} -> {e}")
 
     if fail == 0:
         conn.commit()
-        print(f"[{basename}] COMMIT: transazione completata")
-        print(f"[{basename}] STATO: OK ({ok} statement eseguiti)")
+        log.info(f"{basename} COMMIT transazione completata")
+        log.info(f"{basename} STATO OK {ok} statement")
     else:
         conn.rollback()
-        print(f"[{basename}] ROLLBACK: {fail} errori rilevati")
-        print(f"[{basename}] STATO: ERRORE ({ok} ok, {fail} falliti)")
+        log.warning(f"{basename} ROLLBACK {fail} errori")
+        log.info(f"{basename} STATO ERRORE {ok} ok {fail} falliti")
 
     cur.close()
     conn.close()
