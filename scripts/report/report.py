@@ -25,7 +25,7 @@ def generate_report(password):
         count = cur.fetchone()[0]
         total += count
         log.info(f"{t} {count}")
-    log.info(f"TOTALE {total}")
+    log.info(f"TOTAL {total}")
 
     funcs = [
         ("ETA RESIDENTI", "SELECT P.NOME, P.COGNOME, CALCOLA_ETA(R.CODICE_FISCALE) FROM RESIDENTE R JOIN PERSONA P ON R.CODICE_FISCALE = P.CODICE_FISCALE"),
@@ -42,12 +42,12 @@ def generate_report(password):
             for row in cur.fetchall():
                 log.info(f"{title} {row}")
         except Exception as e:
-            log.error(f"{title} Errore {e}")
+            log.error(f"{title} Error {e}")
 
     cur.execute("SELECT TRIGGER_NAME, TABLE_NAME, STATUS FROM USER_TRIGGERS WHERE TRIGGER_NAME LIKE 'TRG_%' ORDER BY TABLE_NAME")
     for name, table, status in cur.fetchall():
         log.info(f"TRIGGER {name} {table} {status}")
 
-    log.info("STATO COMPLETATO")
+    log.info("STATUS COMPLETED")
     cur.close()
     conn.close()

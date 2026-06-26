@@ -13,7 +13,7 @@ def verify_signoff():
     last_msg = result.stdout.strip()
 
     if last_msg.startswith("log:"):
-        log.info("Skip per commit log")
+        log.info("Skipping log commit")
         sys.exit(0)
 
     result = subprocess.run(
@@ -35,11 +35,11 @@ def verify_signoff():
                 ["git", "log", "-1", "--pretty=format:%s", sha],
                 capture_output=True, text=True
             ).stdout.strip()
-            log.error(f"MANCANTE {sha[:8]} {subject}")
+            log.error(f"MISSING {sha[:8]} {subject}")
             failed += 1
 
     if failed:
-        log.error(f"STATO ERRORE {failed} commit senza signoff")
+        log.error(f"STATUS ERROR {failed} commits without signoff")
         sys.exit(1)
 
-    log.info("STATO OK")
+    log.info("STATUS OK")
