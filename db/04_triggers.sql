@@ -72,9 +72,9 @@ CREATE OR REPLACE TRIGGER TRG_VALIDA_ORARI_TURNO
 BEFORE INSERT OR UPDATE ON TURNO_PROGRAMMATO
 FOR EACH ROW
 BEGIN
-  IF :NEW.ORA_FINE <= :NEW.ORA_INIZIO THEN
+  IF :NEW.DATA_FINE <= :NEW.DATA_INIZIO THEN
     RAISE_APPLICATION_ERROR(-20006,
-      'Ora fine turno deve essere successiva a ora inizio');
+      'Data fine turno deve essere successiva a data inizio');
   END IF;
 END;
 /

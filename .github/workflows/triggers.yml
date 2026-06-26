@@ -44,7 +44,7 @@ jobs:
         run: python3 scripts/main.py run "${{ env.ORACLE_PWD }}" db/02_dml.sql > /dev/null 2>&1
 
       - name: Execute Triggers
-        run: python3 scripts/main.py run "${{ env.ORACLE_PWD }}" db/04_triggers.sql > log/04_triggers.log 2>&1 || true
+        run: mkdir -p log && python3 scripts/main.py run "${{ env.ORACLE_PWD }}" db/04_triggers.sql > log/04_triggers.log 2>&1 || true
 
       - name: Commit logs
         run: |

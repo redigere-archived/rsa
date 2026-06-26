@@ -1,16 +1,9 @@
--- ============================================================
--- RSA – Data Definition Language (DDL)
--- Versione: 2.1  |  Data: 26-06-2026
--- ============================================================
 
--- ──────────────────────────────────────────────────────────
--- SEZIONE 0: DROP in ordine inverso rispetto alla creazione
--- ──────────────────────────────────────────────────────────
 DROP TABLE EFFETTUA          CASCADE CONSTRAINTS;
 DROP TABLE RICEVE            CASCADE CONSTRAINTS;
 DROP TABLE CONSULENZA        CASCADE CONSTRAINTS;
 DROP TABLE VISITA            CASCADE CONSTRAINTS;
-DROP TABLE TURNO_EFFETTIVO   CASCADE CONSTRAINTS;
+DROP TABLE TURNO_EFFETTUATO  CASCADE CONSTRAINTS;
 DROP TABLE TURNO_PROGRAMMATO CASCADE CONSTRAINTS;
 DROP TABLE PRENOTAZIONE      CASCADE CONSTRAINTS;
 DROP TABLE DOCUMENTO         CASCADE CONSTRAINTS;
@@ -21,7 +14,7 @@ DROP TABLE DIETA             CASCADE CONSTRAINTS;
 DROP TABLE DITTA_RISTORANTE  CASCADE CONSTRAINTS;
 DROP TABLE DITTA_PULIZIE     CASCADE CONSTRAINTS;
 DROP TABLE AZIENDA_ESTERNA   CASCADE CONSTRAINTS;
-DROP TABLE RISOLVERE         CASCADE CONSTRAINTS;
+DROP TABLE RISOLVE           CASCADE CONSTRAINTS;
 DROP TABLE NECESSITA         CASCADE CONSTRAINTS;
 DROP TABLE PAI               CASCADE CONSTRAINTS;
 DROP TABLE ASSUME            CASCADE CONSTRAINTS;
@@ -40,12 +33,7 @@ DROP TABLE PARENTE           CASCADE CONSTRAINTS;
 DROP TABLE PERSONALE         CASCADE CONSTRAINTS;
 DROP TABLE PERSONA           CASCADE CONSTRAINTS;
 
--- ──────────────────────────────────────────────────────────
--- SEZIONE 1: GERARCHIA PERSONE (Pattern ISA)
--- Super-entità PERSONA; sotto-entità tramite FK condivisa
--- ──────────────────────────────────────────────────────────
 
--- Super-entità: anagrafica di qualsiasi persona nel sistema
 CREATE TABLE PERSONA (
     CODICE_FISCALE VARCHAR2(16) NOT NULL,
     NOME           VARCHAR2(64) NOT NULL,
@@ -54,7 +42,6 @@ CREATE TABLE PERSONA (
     CONSTRAINT PK_PERSONA PRIMARY KEY (CODICE_FISCALE)
 );
 
--- Sotto-entità di PERSONA: personale dipendente della struttura
 CREATE TABLE PERSONALE (
     CODICE_FISCALE VARCHAR2(16) NOT NULL,
     CONSTRAINT PK_PERSONALE PRIMARY KEY (CODICE_FISCALE),
@@ -62,7 +49,6 @@ CREATE TABLE PERSONALE (
         FOREIGN KEY (CODICE_FISCALE) REFERENCES PERSONA(CODICE_FISCALE)
 );
 
--- Sotto-entità di PERSONA: parente di un residente
 CREATE TABLE PARENTE (
     CODICE_FISCALE VARCHAR2(16) NOT NULL,
     CONSTRAINT PK_PARENTE PRIMARY KEY (CODICE_FISCALE),
@@ -70,7 +56,6 @@ CREATE TABLE PARENTE (
         FOREIGN KEY (CODICE_FISCALE) REFERENCES PERSONA(CODICE_FISCALE)
 );
 
--- Sotto-entità di PERSONA: tutore legale di un residente
 CREATE TABLE TUTORE (
     CODICE_FISCALE VARCHAR2(16) NOT NULL,
     CONSTRAINT PK_TUTORE PRIMARY KEY (CODICE_FISCALE),
@@ -78,7 +63,6 @@ CREATE TABLE TUTORE (
         FOREIGN KEY (CODICE_FISCALE) REFERENCES PERSONA(CODICE_FISCALE)
 );
 
--- Contratto di lavoro associato al personale
 CREATE TABLE CONTRATTO (
     CODICE_CONTRATTO         NUMBER        NOT NULL,
     TIPO_CONTRATTO           VARCHAR2(64)  NOT NULL,
@@ -90,7 +74,6 @@ CREATE TABLE CONTRATTO (
         FOREIGN KEY (CODICE_FISCALE_PERSONALE) REFERENCES PERSONALE(CODICE_FISCALE)
 );
 
--- Sotto-entità di PERSONALE: operatore sociosanitario (OSS)
 CREATE TABLE OPERATORE (
     CODICE_FISCALE VARCHAR2(16) NOT NULL,
     CONSTRAINT PK_OPERATORE PRIMARY KEY (CODICE_FISCALE),
@@ -98,7 +81,6 @@ CREATE TABLE OPERATORE (
         FOREIGN KEY (CODICE_FISCALE) REFERENCES PERSONALE(CODICE_FISCALE)
 );
 
--- Sotto-entità di PERSONALE: medico (con contratto dedicato)
 CREATE TABLE MEDICO (
     CODICE_FISCALE   VARCHAR2(16) NOT NULL,
     CODICE_CONTRATTO NUMBER       NOT NULL,
@@ -109,11 +91,7 @@ CREATE TABLE MEDICO (
         FOREIGN KEY (CODICE_CONTRATTO) REFERENCES CONTRATTO(CODICE_CONTRATTO)
 );
 
--- ──────────────────────────────────────────────────────────
--- SEZIONE 2: STRUTTURA E LOGISTICA
--- ──────────────────────────────────────────────────────────
 
--- Reparto clinico della struttura; il responsabile è sempre un medico
 CREATE TABLE REPARTO (
     CODICE_REPARTO      VARCHAR2(16) NOT NULL,
     NOME_REPARTO        VARCHAR2(64) NOT NULL,
@@ -123,7 +101,6 @@ CREATE TABLE REPARTO (
         FOREIGN KEY (CODICE_RESPONSABILE) REFERENCES MEDICO(CODICE_FISCALE)
 );
 
--- Camera di degenza, afferente a un reparto
 CREATE TABLE CAMERA (
     NUMERO_CAMERA  NUMBER        NOT NULL,
     PIANO          NUMBER        NOT NULL,
@@ -134,7 +111,6 @@ CREATE TABLE CAMERA (
         FOREIGN KEY (CODICE_REPARTO) REFERENCES REPARTO(CODICE_REPARTO)
 );
 
--- Sotto-entità di PERSONA: ospite residente nella struttura
 CREATE TABLE RESIDENTE (
     CODICE_FISCALE VARCHAR2(16) NOT NULL,
     NUMERO_CAMERA  NUMBER       NOT NULL,
@@ -145,11 +121,7 @@ CREATE TABLE RESIDENTE (
         FOREIGN KEY (NUMERO_CAMERA) REFERENCES CAMERA(NUMERO_CAMERA)
 );
 
--- ──────────────────────────────────────────────────────────
--- SEZIONE 3: CLINICA E CURA
--- ──────────────────────────────────────────────────────────
 
--- Catalogo delle malattie con livello di gravità
 CREATE TABLE MALATTIA (
     CODICE      VARCHAR2(16) NOT NULL,
     NOME        VARCHAR2(64) NOT NULL,
@@ -158,8 +130,6 @@ CREATE TABLE MALATTIA (
     CONSTRAINT PK_MALATTIA PRIMARY KEY (CODICE)
 );
 
--- Catalogo dei farmaci somministrati ai residenti
--- NOME allargato a VARCHAR2(64): un nome commerciale può superare 16 caratteri
 CREATE TABLE FARMACO (
     CODICE_FARMACO VARCHAR2(16) NOT NULL,
     NOME           VARCHAR2(64) NOT NULL,
@@ -168,7 +138,6 @@ CREATE TABLE FARMACO (
     CONSTRAINT PK_FARMACO PRIMARY KEY (CODICE_FARMACO)
 );
 
--- Trattamento terapeutico con obiettivo, esito e stato raggiungimento
 CREATE TABLE TRATTAMENTO (
     CODICE_TRATTAMENTO VARCHAR2(16) NOT NULL,
     OBIETTIVO          CLOB,
@@ -178,7 +147,6 @@ CREATE TABLE TRATTAMENTO (
     CONSTRAINT PK_TRATTAMENTO PRIMARY KEY (CODICE_TRATTAMENTO)
 );
 
--- Associativa: un residente soffre di una o più malattie
 CREATE TABLE SOFFRE (
     CODICE         VARCHAR2(16) NOT NULL,
     CODICE_FISCALE VARCHAR2(16) NOT NULL,
@@ -189,7 +157,6 @@ CREATE TABLE SOFFRE (
         FOREIGN KEY (CODICE_FISCALE) REFERENCES RESIDENTE(CODICE_FISCALE)
 );
 
--- Associativa: un residente assume uno o più farmaci
 CREATE TABLE ASSUME (
     CODICE_FARMACO VARCHAR2(16) NOT NULL,
     CODICE_FISCALE VARCHAR2(16) NOT NULL,
@@ -200,7 +167,6 @@ CREATE TABLE ASSUME (
         FOREIGN KEY (CODICE_FISCALE) REFERENCES RESIDENTE(CODICE_FISCALE)
 );
 
--- Piano Assistenziale Individuale (PAI / CVI) per ogni residente
 CREATE TABLE PAI (
     CODICE_PAI               VARCHAR2(16) NOT NULL,
     CODICE_FISCALE_RESIDENTE VARCHAR2(16) NOT NULL,
@@ -213,7 +179,6 @@ CREATE TABLE PAI (
         FOREIGN KEY (CODICE_FISCALE_RESIDENTE) REFERENCES RESIDENTE(CODICE_FISCALE)
 );
 
--- Associativa: un PAI richiede uno o più trattamenti
 CREATE TABLE NECESSITA (
     CODICE_TRATTAMENTO VARCHAR2(16) NOT NULL,
     CODICE_PAI         VARCHAR2(16) NOT NULL,
@@ -224,30 +189,22 @@ CREATE TABLE NECESSITA (
         FOREIGN KEY (CODICE_PAI) REFERENCES PAI(CODICE_PAI)
 );
 
--- Associativa: un operatore (OSS) esegue/risolve un trattamento
--- NUOVO – era completamente assente nello script precedente
-CREATE TABLE RISOLVERE (
+CREATE TABLE RISOLVE (
     CODICE_TRATTAMENTO VARCHAR2(16) NOT NULL,
     CODICE_OSS         VARCHAR2(16) NOT NULL,
-    CONSTRAINT PK_RISOLVERE PRIMARY KEY (CODICE_TRATTAMENTO, CODICE_OSS),
-    CONSTRAINT FK_RISOLVERE_TRATTAMENTO
+    CONSTRAINT PK_RISOLVE PRIMARY KEY (CODICE_TRATTAMENTO, CODICE_OSS),
+    CONSTRAINT FK_RISOLVE_TRATTAMENTO
         FOREIGN KEY (CODICE_TRATTAMENTO) REFERENCES TRATTAMENTO(CODICE_TRATTAMENTO),
-    CONSTRAINT FK_RISOLVERE_OPERATORE
+    CONSTRAINT FK_RISOLVE_OPERATORE
         FOREIGN KEY (CODICE_OSS) REFERENCES OPERATORE(CODICE_FISCALE)
 );
 
--- Consulenza medica specialistica ricevuta dalla struttura
--- CAMPO NOTE_CONSULENZA: rinominato (NOME_CONSULENTE era semanticamente errato:
---   il consulente è già tracciato via EFFETTUA → MEDICO)
 CREATE TABLE CONSULENZA (
     DATA_CONSULENZA DATE NOT NULL,
     NOTE_CONSULENZA CLOB,
     CONSTRAINT PK_CONSULENZA PRIMARY KEY (DATA_CONSULENZA)
 );
 
--- Associativa: un medico effettua una consulenza
--- CODICE_FISCALE_MEDICO: rinominato rispetto al generico CODICE_FISCALE
---   per chiarire che qui la FK punta specificamente a MEDICO
 CREATE TABLE EFFETTUA (
     DATA_CONSULENZA       DATE         NOT NULL,
     CODICE_FISCALE_MEDICO VARCHAR2(16) NOT NULL,
@@ -258,10 +215,6 @@ CREATE TABLE EFFETTUA (
         FOREIGN KEY (CODICE_FISCALE_MEDICO) REFERENCES MEDICO(CODICE_FISCALE)
 );
 
--- Associativa: una consulenza è ricevuta (collegata) a un PAI
--- CAMBIATA SEMANTICA: prima legava RESIDENTE↔CONSULENZA (collegamento ridondante
---   perché il residente si ricava già da PAI); ora lega PAI↔CONSULENZA
---   come da schema ER ("Associa la consulenza al PAI")
 CREATE TABLE RICEVE (
     CODICE_PAI      VARCHAR2(16) NOT NULL,
     DATA_CONSULENZA DATE         NOT NULL,
@@ -272,11 +225,7 @@ CREATE TABLE RICEVE (
         FOREIGN KEY (DATA_CONSULENZA) REFERENCES CONSULENZA(DATA_CONSULENZA)
 );
 
--- ──────────────────────────────────────────────────────────
--- SEZIONE 4: AZIENDE ED ENTI ESTERNI
--- ──────────────────────────────────────────────────────────
 
--- Super-entità per le aziende esterne convenzionate
 CREATE TABLE AZIENDA_ESTERNA (
     PARTITA_IVA              VARCHAR2(16) NOT NULL,
     NOME_AZIENDA             CLOB,
@@ -289,7 +238,6 @@ CREATE TABLE AZIENDA_ESTERNA (
         FOREIGN KEY (CODICE_FISCALE_OPERATORE) REFERENCES OPERATORE(CODICE_FISCALE)
 );
 
--- Sotto-entità di AZIENDA_ESTERNA: ditta di pulizie
 CREATE TABLE DITTA_PULIZIE (
     PARTITA_IVA VARCHAR2(16) NOT NULL,
     CONSTRAINT PK_DITTA_PULIZIE PRIMARY KEY (PARTITA_IVA),
@@ -297,7 +245,6 @@ CREATE TABLE DITTA_PULIZIE (
         FOREIGN KEY (PARTITA_IVA) REFERENCES AZIENDA_ESTERNA(PARTITA_IVA)
 );
 
--- Sotto-entità di AZIENDA_ESTERNA: ditta di ristorazione
 CREATE TABLE DITTA_RISTORANTE (
     PARTITA_IVA VARCHAR2(16) NOT NULL,
     CONSTRAINT PK_DITTA_RISTORANTE PRIMARY KEY (PARTITA_IVA),
@@ -305,8 +252,6 @@ CREATE TABLE DITTA_RISTORANTE (
         FOREIGN KEY (PARTITA_IVA) REFERENCES AZIENDA_ESTERNA(PARTITA_IVA)
 );
 
--- Catalogo delle diete disponibili
--- NUOVO – sostituisce il campo NOME libero che FORNISCE aveva prima
 CREATE TABLE DIETA (
     NOME      VARCHAR2(64)  NOT NULL,
     TIPOLOGIA VARCHAR2(64),
@@ -314,9 +259,6 @@ CREATE TABLE DIETA (
     CONSTRAINT PK_DIETA PRIMARY KEY (NOME)
 );
 
--- Associativa: una ditta di ristorazione fornisce una dieta
--- RISTRUTTURATA: in precedenza legava DITTA_RISTORANTE↔CAMERA con un campo NOME libero.
---   Ora segue il modello ER: DITTA_RISTORANTE↔DIETA (entrambe FK)
 CREATE TABLE FORNISCE (
     PARTITA_IVA VARCHAR2(16) NOT NULL,
     NOME        VARCHAR2(64) NOT NULL,
@@ -327,7 +269,6 @@ CREATE TABLE FORNISCE (
         FOREIGN KEY (NOME) REFERENCES DIETA(NOME)
 );
 
--- Associativa: una ditta di pulizie pulisce una camera
 CREATE TABLE PULISCE (
     NUMERO_CAMERA NUMBER       NOT NULL,
     PARTITA_IVA   VARCHAR2(16) NOT NULL,
@@ -338,16 +279,12 @@ CREATE TABLE PULISCE (
         FOREIGN KEY (PARTITA_IVA) REFERENCES DITTA_PULIZIE(PARTITA_IVA)
 );
 
--- Ente pubblico emittente di documenti d'identità
--- NOME_ISTITUZIONE: rinominato da ENTE_EROGAZIONE per aderenza al modello ER
 CREATE TABLE ENTE (
     PARTITA_IVA      VARCHAR2(16)  NOT NULL,
     NOME_ISTITUZIONE VARCHAR2(128) NOT NULL,
     CONSTRAINT PK_ENTE PRIMARY KEY (PARTITA_IVA)
 );
 
--- Documento d'identità di una persona, emesso da un ente pubblico
--- Creata DOPO ENTE per soddisfare la FK (ordine corretto)
 CREATE TABLE DOCUMENTO (
     CODICE_FISCALE VARCHAR2(16) NOT NULL,
     SCADENZA       DATE         NOT NULL,
@@ -359,12 +296,7 @@ CREATE TABLE DOCUMENTO (
         FOREIGN KEY (PARTITA_IVA) REFERENCES ENTE(PARTITA_IVA)
 );
 
--- ──────────────────────────────────────────────────────────
--- SEZIONE 5: GESTIONE OPERATIVA E AMMINISTRATIVA
--- ──────────────────────────────────────────────────────────
 
--- Prenotazione di ingresso in struttura, eventualmente gestita da un tutore
--- CODICE_FISCALE_TUTORE: corretto da CODICE_FISCALE_TUTOR (troncamento typo)
 CREATE TABLE PRENOTAZIONE (
     CODICE_PRENOTAZIONE   NUMBER        NOT NULL,
     DESCRIZIONE           CLOB,
@@ -379,12 +311,6 @@ CREATE TABLE PRENOTAZIONE (
         FOREIGN KEY (NUMERO_CAMERA) REFERENCES CAMERA(NUMERO_CAMERA)
 );
 
--- Turno di lavoro programmato per un medico
--- RISTRUTTURATA rispetto allo script precedente:
---   • CODICE_FISCALE_MEDICO (FK→MEDICO) invece del generico CODICE_FISCALE (FK→PERSONALE)
---   • DATA_INIZIO / DATA_FINE (DATE): periodo di validità del turno
---   • GIORNO (VARCHAR2): giorno della settimana (es. 'Lunedì', 'Martedì')
---   • PK semplificata a (CODICE_FISCALE_MEDICO, DATA_INIZIO)
 CREATE TABLE TURNO_PROGRAMMATO (
     CODICE_FISCALE_MEDICO VARCHAR2(16) NOT NULL,
     DATA_INIZIO           DATE         NOT NULL,
@@ -396,24 +322,18 @@ CREATE TABLE TURNO_PROGRAMMATO (
         FOREIGN KEY (CODICE_FISCALE_MEDICO) REFERENCES MEDICO(CODICE_FISCALE)
 );
 
--- Turno effettivamente lavorato da un medico
--- RINOMINATA da TURNO_EFFETTUATO → TURNO_EFFETTIVO (nome corretto da ER)
--- PK composta (FASCIA_ORARIA, GIORNO, CODICE_FISCALE_MEDICO):
---   • evita conflitti quando due medici lavorano la stessa fascia lo stesso giorno
---   • permette query "chi ha lavorato il giorno X" e confronti con TURNO_PROGRAMMATO
-CREATE TABLE TURNO_EFFETTIVO (
+CREATE TABLE TURNO_EFFETTUATO (
     FASCIA_ORARIA         VARCHAR2(16) NOT NULL,
     ORA_INIZIO            VARCHAR2(16) NOT NULL,
     ORA_FINE              VARCHAR2(16) NOT NULL,
     GIORNO                DATE         NOT NULL,
     CODICE_FISCALE_MEDICO VARCHAR2(16) NOT NULL,
-    CONSTRAINT PK_TURNO_EFFETTIVO
+    CONSTRAINT PK_TURNO_EFFETTUATO
         PRIMARY KEY (FASCIA_ORARIA, GIORNO, CODICE_FISCALE_MEDICO),
     CONSTRAINT FK_TURNOEFF_MEDICO
         FOREIGN KEY (CODICE_FISCALE_MEDICO) REFERENCES MEDICO(CODICE_FISCALE)
 );
 
--- Visita di un parente a un residente
 CREATE TABLE VISITA (
     CODICE_FISCALE_PARENTE   VARCHAR2(16) NOT NULL,
     GIORNO_VISITA            DATE         NOT NULL,

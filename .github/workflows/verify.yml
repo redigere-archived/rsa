@@ -49,6 +49,9 @@ jobs:
       - name: Execute Triggers
         run: python3 scripts/main.py run "${{ env.ORACLE_PWD }}" db/04_triggers.sql > /dev/null 2>&1
 
+      - name: Create log directory
+        run: mkdir -p log
+
       - name: Verify records
         run: python3 scripts/main.py verify "${{ env.ORACLE_PWD }}" > log/05_verify.log 2>&1 || true
 
