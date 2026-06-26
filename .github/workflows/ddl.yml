@@ -38,7 +38,7 @@ jobs:
         run: python3 scripts/main.py wait "${{ env.ORACLE_PWD }}"
 
       - name: Execute DDL
-        run: python3 scripts/main.py run "${{ env.ORACLE_PWD }}" db/01_ddl.sql > log/01_ddl.log 2>&1 || true
+        run: mkdir -p log && python3 scripts/main.py run "${{ env.ORACLE_PWD }}" db/01_ddl.sql > log/01_ddl.log 2>&1 || true
 
       - name: Commit logs
         run: |
