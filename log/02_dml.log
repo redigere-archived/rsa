@@ -1,0 +1,13 @@
+[INFO] 02_dml.sql INIZIO
+[INFO] 02_dml.sql Connessione OK
+[ERROR] 02_dml.sql ERRORE: INSERT INTO FORNISCE (PARTITA_IVA, NOME) VALUES ('56789012345', 'Mense Geriatria -> ORA-00001: unique constraint (SYSTEM.PK_FORNISCE) violated on table SYSTEM.FORNISCE columns (PARTITA_IVA, NOME)
+ORA-03301: (ORA-00001 details) row with column values (PARTITA_IVA:'56789012345', NOME:'Mense Geriatria') already exists
+Help: https://docs.oracle.com/error-help/db/ora-00001/
+[ERROR] 02_dml.sql ERRORE: INSERT INTO DOCUMENTO (CODICE_FISCALE, SCADENZA, PARTITA_IVA) -> ORA-02291: integrity constraint (SYSTEM.FK_DOCUMENTO_ENTE) violated - parent key not found
+Help: https://docs.oracle.com/error-help/db/ora-02291/
+[ERROR] 02_dml.sql ERRORE: INSERT INTO DOCUMENTO (CODICE_FISCALE, SCADENZA, PARTITA_IVA) -> ORA-02291: integrity constraint (SYSTEM.FK_DOCUMENTO_ENTE) violated - parent key not found
+Help: https://docs.oracle.com/error-help/db/ora-02291/
+[ERROR] 02_dml.sql ERRORE: INSERT INTO DOCUMENTO (CODICE_FISCALE, SCADENZA, PARTITA_IVA) -> ORA-02291: integrity constraint (SYSTEM.FK_DOCUMENTO_ENTE) violated - parent key not found
+Help: https://docs.oracle.com/error-help/db/ora-02291/
+[WARNING] 02_dml.sql ROLLBACK 4 errori
+[INFO] 02_dml.sql STATO ERRORE 119 ok 4 falliti
