@@ -9,7 +9,7 @@ def verify_records(password):
     conn = oracledb.connect(user="system", password=password, dsn="localhost:1521/FREEPDB1")
     cur = conn.cursor()
 
-    log.info("INIZIO VERIFICA DATI")
+    log.info("DATA VERIFICATION START")
 
     tables = [
         "PERSONA","PERSONALE","PARENTE","TUTORE","OPERATORE","CONTRATTO",
@@ -29,15 +29,15 @@ def verify_records(password):
         total += count
         if count == 0:
             empty.append(t)
-            log.warning(f"{t} VUOTA")
+            log.warning(f"{t} EMPTY")
         else:
-            log.info(f"{t} {count} record")
+            log.info(f"{t} {count} records")
 
-    log.info(f"Tabelle {len(tables)} Record totali {total} Vuote {len(empty)}")
+    log.info(f"Tables {len(tables)} Total records {total} Empty {len(empty)}")
     if empty:
-        log.error(f"STATO ERRORE {', '.join(empty)} vuote")
+        log.error(f"STATUS ERROR {', '.join(empty)} empty")
         sys.exit(1)
-    log.info("STATO OK")
+    log.info("STATUS OK")
 
     cur.close()
     conn.close()

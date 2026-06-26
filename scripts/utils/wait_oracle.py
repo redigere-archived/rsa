@@ -23,12 +23,12 @@ def wait_for_oracle(password):
         try:
             c = oracledb.connect(user="system", password=password, dsn=f"{host}:{port}/{service}")
             c.close()
-            log.info(f"Oracle pronto dopo {(i + 1) * 5}s")
+            log.info(f"Oracle ready after {(i + 1) * 5}s")
             sys.exit(0)
         except Exception as e:
-            log.warning(f"tentativo {i + 1}: {e}")
+            log.warning(f"attempt {i + 1}: {e}")
 
         time.sleep(5)
 
-    log.error("TIMEOUT dopo 10 minuti")
+    log.error("TIMEOUT after 10 minutes")
     sys.exit(1)
