@@ -21,9 +21,11 @@ def generate_report(password):
     ]
     total = 0
     for t in tables:
+        log.info(f"REPORT: SELECT COUNT(*) FROM {t}")
         cur.execute(f"SELECT COUNT(*) FROM {t}")
         count = cur.fetchone()[0]
         total += count
+        log.info(f"REPORT: {t} -> {count}")
         log.info(f"{t} {count}")
     log.info(f"TOTAL {total}")
 
@@ -37,9 +39,13 @@ def generate_report(password):
         ("NUMERO VISITE", "SELECT P.NOME, P.COGNOME, CONTEGGIO_VISITE_RESIDENTE(R.CODICE_FISCALE, TO_DATE('2025-01-01','YYYY-MM-DD'), TO_DATE('2025-12-31','YYYY-MM-DD')) FROM RESIDENTE R JOIN PERSONA P ON R.CODICE_FISCALE = P.CODICE_FISCALE"),
     ]
     for title, sql in funcs:
+        log.info(f"REPORT: executing function query - {title}")
+        log.info(f"REPORT: SQL: {sql[:200]}")
         try:
             cur.execute(sql)
-            for row in cur.fetchall():
+            rows = cur.fetchall()
+            log.info(f"REPORT: {title} returned {len(rows)} rows")
+            for row in rows:
                 log.info(f"{title} {row}")
         except Exception as e:
             log.error(f"{title} Error {e}")

@@ -29,7 +29,6 @@ def verify_schema(password):
         "ASSUME": {"CODICE_FARMACO": "VARCHAR2", "CODICE_FISCALE": "VARCHAR2"},
         "PAI": {"CODICE_PAI": "VARCHAR2", "CODICE_FISCALE_RESIDENTE": "VARCHAR2", "DATA_REDAZIONE": "DATE", "DATA_REVISIONE": "DATE", "DIAGNOSI": "CLOB", "DATA_DIMISSIONE": "DATE"},
         "NECESSITA": {"CODICE_TRATTAMENTO": "VARCHAR2", "CODICE_PAI": "VARCHAR2"},
-        "RISOLVE": {"CODICE_TRATTAMENTO": "VARCHAR2", "CODICE_OSS": "VARCHAR2"},
         "AZIENDA_ESTERNA": {"PARTITA_IVA": "VARCHAR2", "NOME_AZIENDA": "CLOB", "EMAIL": "CLOB", "NUMERO_DI_TELEFONO": "VARCHAR2", "PEC": "CLOB", "CODICE_FISCALE_OPERATORE": "VARCHAR2"},
         "DITTA_PULIZIE": {"PARTITA_IVA": "VARCHAR2"},
         "DITTA_RISTORANTE": {"PARTITA_IVA": "VARCHAR2"},
@@ -53,24 +52,32 @@ def verify_schema(password):
     existing_tables = {row[0] for row in cur.fetchall()}
 
     for table_name in sorted(expected_tables.keys()):
+        log.info(f"SCHEMA: checking table {table_name}")
         if table_name not in existing_tables:
             errors.append(f"MISSING TABLE {table_name}")
             log.error(f"{table_name} MISSING")
             continue
 
+        log.info(f"SCHEMA: SELECT COLUMN_NAME, DATA_TYPE FROM ALL_TAB_COLUMNS WHERE TABLE_NAME = '{table_name}'")
         cur.execute(f"SELECT COLUMN_NAME, DATA_TYPE FROM ALL_TAB_COLUMNS WHERE TABLE_NAME = '{table_name}' AND OWNER = 'SYSTEM'")
         columns = {row[0]: row[1] for row in cur.fetchall()}
+        log.info(f"SCHEMA: {table_name} columns found: {list(columns.keys())}")
 
         for col_name, col_type in expected_tables[table_name].items():
+            log.info(f"SCHEMA: checking column {table_name}.{col_name} expected type {col_type}")
             if col_name not in columns:
                 errors.append(f"MISSING COLUMN {table_name}.{col_name}")
                 log.error(f"{table_name}.{col_name} MISSING")
             elif not columns[col_name].startswith(col_type):
                 errors.append(f"WRONG TYPE {table_name}.{col_name} expected {col_type} found {columns[col_name]}")
                 log.error(f"{table_name}.{col_name} WRONG TYPE {columns[col_name]}")
+            else:
+                log.info(f"SCHEMA: {table_name}.{col_name} OK ({columns[col_name]})")
 
+        log.info(f"SCHEMA: SELECT COUNT(*) FROM {table_name}")
         cur.execute(f"SELECT COUNT(*) FROM {table_name}")
         count = cur.fetchone()[0]
+        log.info(f"SCHEMA: {table_name} COUNT(*) = {count}")
         if count == 0:
             log.warning(f"{table_name} EMPTY TABLE")
         else:

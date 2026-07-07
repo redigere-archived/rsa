@@ -28,6 +28,7 @@ def execute_sql(password, sql_file):
             name_match = re.search(r'(FUNCTION|TRIGGER|PACKAGE|PROCEDURE)\s+(\S+)', s, re.IGNORECASE)
             obj_type = name_match.group(1) if name_match else "OBJECT"
             obj_name = name_match.group(2) if name_match else s[:40]
+            log.info(f"{basename} EXECUTING: CREATE OR REPLACE {obj_type} {obj_name}")
             try:
                 cur.execute(s)
                 ok += 1
@@ -39,12 +40,15 @@ def execute_sql(password, sql_file):
             stmts = [x.strip() for x in s.split(";") if x.strip()]
             for stmt in stmts:
                 upper = stmt.strip().upper()
+                log.info(f"{basename} EXECUTING: {stmt.split(chr(10))[0][:120]}")
                 try:
                     cur.execute(stmt)
                     ok += 1
+                    log.info(f"{basename} OK: {stmt.split(chr(10))[0][:80]}")
                 except oracledb.Error as e:
                     if "ORA-00942" in str(e) and upper.startswith("DROP"):
                         ok += 1
+                        log.info(f"{basename} OK (table not exist): {stmt.split(chr(10))[0][:80]}")
                     else:
                         fail += 1
                         first_line = stmt.split("\n")[0][:80]
