@@ -52,15 +52,3 @@ jobs:
         run: python3 main.py schema "${{ env.ORACLE_PWD }}" > log/06_schema.log 2>&1 || true
       - name: Report
         run: python3 main.py report "${{ env.ORACLE_PWD }}" > log/07_report.log 2>&1 || true
-
-      - name: Commit logs
-        run: |
-          LAST_MSG=$(git log -1 --pretty=format:"%s")
-          if echo "$LAST_MSG" | grep -q "^log:"; then exit 0; fi
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f log/
-          git diff --cached --quiet && exit 0
-          git commit -s -m "log: Verify $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          git pull --rebase origin main
-          git push origin HEAD:main
