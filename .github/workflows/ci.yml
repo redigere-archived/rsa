@@ -13,7 +13,7 @@ permissions:
   contents: write
 
 env:
-  ORACLE_PWD: ${{ secrets.ORACLE_PWD }}
+  ORACLE_PWD: "test_password123"
 
 jobs:
   signoff:
