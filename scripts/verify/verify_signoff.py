@@ -40,11 +40,11 @@ def verify_signoff():
                 ["git", "log", "-1", "--pretty=format:%s", sha],
                 capture_output=True, text=True
             ).stdout.strip()
-            log.error(f"MISSING {sha[:8]} {subject}")
+            log.error(f"missing {sha[:8]} {subject}")
             failed += 1
 
     if failed:
-        log.error(f"STATUS ERROR {failed} commits without {tag}")
+        log.error(f"status error {failed} commits without {tag}")
         sys.exit(1)
 
-    log.info("STATUS OK")
+    log.info("status ok")

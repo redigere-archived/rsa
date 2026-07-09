@@ -10,30 +10,30 @@ def verify_records(password):
     conn = oracledb.connect(user=get_db_user(cfg), password=password, dsn=get_dsn(cfg))
     cur = conn.cursor()
 
-    log.info("DATA VERIFICATION START")
+    log.info("data verification start")
 
     tables = cfg["tables"]
     total = 0
     empty = []
     for t in tables:
-        log.info(f"VERIFY: SELECT COUNT(*) FROM {t}")
+        log.info(f"verify: SELECT COUNT(*) FROM {t}")
         cur.execute(f"SELECT COUNT(*) FROM {t}")
         count = cur.fetchone()[0]
         total += count
-        log.info(f"VERIFY: {t} -> {count} records")
+        log.info(f"verify: {t} -> {count} records")
         if count == 0:
             empty.append(t)
-            log.warning(f"{t} EMPTY")
+            log.warning(f"{t} empty")
         else:
             log.info(f"{t} {count} records")
 
-    log.info(f"Tables {len(tables)} Total records {total} Empty {len(empty)}")
+    log.info(f"tables {len(tables)} total records {total} empty {len(empty)}")
     if empty:
-        log.error(f"STATUS ERROR {', '.join(empty)} empty")
+        log.error(f"status error {', '.join(empty)} empty")
         for e in empty:
-            log.error(f"  EMPTY TABLE: {e}")
+            log.error(f"  empty table: {e}")
         sys.exit(1)
-    log.info("STATUS OK")
+    log.info("status ok")
 
     cur.close()
     conn.close()

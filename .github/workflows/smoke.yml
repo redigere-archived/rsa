@@ -1,0 +1,46 @@
+name: smoke
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install pyyaml oracledb
+
+      - name: Check python syntax
+        run: python -m py_compile main.py
+
+      - name: Check config loads
+        run: python -c "from scripts.utils.config import load_config; cfg = load_config(); assert 'database' in cfg; assert 'tables' in cfg; print('config ok')"
+
+      - name: Check signoff
+        run: python main.py signoff
+
+      - name: Verify sql files exist
+        run: |
+          for f in db/01_ddl.sql db/02_dml.sql db/03_functions.sql db/04_triggers.sql; do
+            test -f "$f" || { echo "missing $f"; exit 1; }
+          done
+          echo "sql files ok"

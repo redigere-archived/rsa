@@ -1,4 +1,4 @@
-name: CI
+name: ci
 
 on:
   push:
@@ -32,23 +32,30 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Start Oracle
+      - name: Start oracle
         run: docker run -d --name oracle-xe -e ORACLE_PASSWORD=${{ env.ORACLE_PWD }} -p 1521:1521 gvenzl/oracle-free:23-slim
       - run: pip install oracledb pyyaml
-      - name: Wait for Oracle
+      - name: Wait for oracle
         run: python3 main.py wait "${{ env.ORACLE_PWD }}"
 
-      - name: Execute DDL
-        run: mkdir -p log && python3 main.py run "${{ env.ORACLE_PWD }}" db/01_ddl.sql > log/01_ddl.log 2>&1 || true
-      - name: Execute DML
-        run: python3 main.py run "${{ env.ORACLE_PWD }}" db/02_dml.sql > log/02_dml.log 2>&1 || true
-      - name: Execute Functions
-        run: python3 main.py run "${{ env.ORACLE_PWD }}" db/03_functions.sql > log/03_functions.log 2>&1 || true
-      - name: Execute Triggers
-        run: python3 main.py run "${{ env.ORACLE_PWD }}" db/04_triggers.sql > log/04_triggers.log 2>&1 || true
+      - name: Execute ddl
+        run: mkdir -p log && python3 main.py run "${{ env.ORACLE_PWD }}" db/01_ddl.sql 2>&1 | tee log/01_ddl.log
+      - name: Execute dml
+        run: python3 main.py run "${{ env.ORACLE_PWD }}" db/02_dml.sql 2>&1 | tee log/02_dml.log
+      - name: Execute functions
+        run: python3 main.py run "${{ env.ORACLE_PWD }}" db/03_functions.sql 2>&1 | tee log/03_functions.log
+      - name: Execute triggers
+        run: python3 main.py run "${{ env.ORACLE_PWD }}" db/04_triggers.sql 2>&1 | tee log/04_triggers.log
       - name: Verify records
-        run: python3 main.py verify "${{ env.ORACLE_PWD }}" > log/05_verify.log 2>&1 || true
+        run: python3 main.py verify "${{ env.ORACLE_PWD }}" 2>&1 | tee log/05_verify.log
       - name: Verify schema
-        run: python3 main.py schema "${{ env.ORACLE_PWD }}" > log/06_schema.log 2>&1 || true
+        run: python3 main.py schema "${{ env.ORACLE_PWD }}" 2>&1 | tee log/06_schema.log
       - name: Report
-        run: python3 main.py report "${{ env.ORACLE_PWD }}" > log/07_report.log 2>&1 || true
+        run: python3 main.py report "${{ env.ORACLE_PWD }}" 2>&1 | tee log/07_report.log
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-logs
+          path: log/

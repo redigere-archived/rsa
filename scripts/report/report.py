@@ -9,28 +9,28 @@ def generate_report(password):
     conn = oracledb.connect(user=get_db_user(cfg), password=password, dsn=get_dsn(cfg))
     cur = conn.cursor()
 
-    log.info("RSA REPORT DATABASE")
+    log.info("rsa report database")
 
     tables = cfg["tables"]
     total = 0
     for t in tables:
-        log.info(f"REPORT: SELECT COUNT(*) FROM {t}")
+        log.info(f"report: SELECT COUNT(*) FROM {t}")
         cur.execute(f"SELECT COUNT(*) FROM {t}")
         count = cur.fetchone()[0]
         total += count
-        log.info(f"REPORT: {t} -> {count}")
+        log.info(f"report: {t} -> {count}")
         log.info(f"{t} {count}")
-    log.info(f"TOTAL {total}")
+    log.info(f"total {total}")
 
     for entry in cfg["reports"]["queries"]:
         title = entry["name"]
         sql = entry["sql"]
-        log.info(f"REPORT: executing function query - {title}")
-        log.info(f"REPORT: SQL: {sql[:200]}")
+        log.info(f"report: executing function query - {title}")
+        log.info(f"report: sql: {sql[:200]}")
         try:
             cur.execute(sql)
             rows = cur.fetchall()
-            log.info(f"REPORT: {title} returned {len(rows)} rows")
+            log.info(f"report: {title} returned {len(rows)} rows")
             for row in rows:
                 log.info(f"{title} {row}")
         except Exception as e:
@@ -39,8 +39,8 @@ def generate_report(password):
     trg_pattern = cfg["schema"]["trigger_name_pattern"]
     cur.execute(f"SELECT TRIGGER_NAME, TABLE_NAME, STATUS FROM USER_TRIGGERS WHERE TRIGGER_NAME LIKE '{trg_pattern}' ORDER BY TABLE_NAME")
     for name, table, status in cur.fetchall():
-        log.info(f"TRIGGER {name} {table} {status}")
+        log.info(f"trigger {name} {table} {status}")
 
-    log.info("STATUS COMPLETED")
+    log.info("status completed")
     cur.close()
     conn.close()
