@@ -1,54 +1,26 @@
 import sys
 import logging
 import oracledb
+from scripts.utils.config import load_config, get_dsn, get_db_user, get_db_owner
 
-logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
 
 def verify_schema(password):
-    conn = oracledb.connect(user="system", password=password, dsn="localhost:1521/FREEPDB1")
+    cfg = load_config()
+    conn = oracledb.connect(user=get_db_user(cfg), password=password, dsn=get_dsn(cfg))
     cur = conn.cursor()
 
     log.info("SCHEMA VERIFICATION START")
 
-    expected_tables = {
-        "PERSONA": {"CODICE_FISCALE": "VARCHAR2", "NOME": "VARCHAR2", "COGNOME": "VARCHAR2", "DATA_NASCITA": "DATE"},
-        "PERSONALE": {"CODICE_FISCALE": "VARCHAR2"},
-        "PARENTE": {"CODICE_FISCALE": "VARCHAR2"},
-        "TUTORE": {"CODICE_FISCALE": "VARCHAR2"},
-        "OPERATORE": {"CODICE_FISCALE": "VARCHAR2"},
-        "CONTRATTO": {"CODICE_CONTRATTO": "NUMBER", "TIPO_CONTRATTO": "VARCHAR2", "PAGA_ORARIA": "NUMBER", "TASSA_DETRATTA": "NUMBER", "CODICE_FISCALE_PERSONALE": "VARCHAR2"},
-        "MEDICO": {"CODICE_FISCALE": "VARCHAR2", "CODICE_CONTRATTO": "NUMBER"},
-        "REPARTO": {"CODICE_REPARTO": "VARCHAR2", "NOME_REPARTO": "VARCHAR2", "CODICE_FISCALE_RESPONSABILE": "VARCHAR2"},
-        "CAMERA": {"NUMERO_CAMERA": "NUMBER", "PIANO": "NUMBER", "LETTI_TOTALI": "NUMBER", "CODICE_REPARTO": "VARCHAR2"},
-        "RESIDENTE": {"CODICE_FISCALE_RESIDENTE": "VARCHAR2", "NUMERO_CAMERA": "NUMBER"},
-        "MALATTIA": {"CODICE": "VARCHAR2", "NOME": "VARCHAR2", "DESCRIZIONE": "CLOB", "LIVELLO": "VARCHAR2"},
-        "FARMACO": {"CODICE_FARMACO": "VARCHAR2", "NOME": "VARCHAR2", "DOSE": "NUMBER", "FASCIA_ORARIA": "VARCHAR2"},
-        "TRATTAMENTO": {"CODICE_TRATTAMENTO": "VARCHAR2", "OBIETTIVI": "CLOB", "ESITO": "CLOB", "RAGGIUNTO": "CHAR"},
-        "SOFFRE": {"CODICE": "VARCHAR2", "CODICE_FISCALE_RESIDENTE": "VARCHAR2"},
-        "ASSUME": {"DATA_ASSUNZIONE": "DATE", "CODICE_FARMACO": "VARCHAR2", "CODICE_FISCALE": "VARCHAR2"},
-        "PAI": {"CODICE_PAI": "VARCHAR2", "CODICE_FISCALE_RESIDENTE": "VARCHAR2", "DATA_REDAZIONE": "DATE", "DATA_REVISIONE": "DATE", "DIAGNOSI": "CLOB", "DATA_DIMISSIONE": "DATE"},
-        "NECESSITA": {"CODICE_TRATTAMENTO": "VARCHAR2", "CODICE_PAI": "VARCHAR2"},
-        "AZIENDA_ESTERNA": {"PARTITA_IVA": "VARCHAR2", "NOME_AZIENDA": "CLOB", "EMAIL": "CLOB", "NUMERO_DI_TELEFONO": "VARCHAR2", "PEC": "CLOB", "CODICE_FISCALE_OPERATORE": "VARCHAR2"},
-        "DITTA_PULIZIE": {"PARTITA_IVA": "VARCHAR2"},
-        "DITTA_RISTORANTE": {"PARTITA_IVA": "VARCHAR2"},
-        "DIETA": {"NOME": "VARCHAR2", "TIPOLOGIA": "VARCHAR2", "NOTA": "VARCHAR2"},
-        "FORNISCE": {"PARTITA_IVA": "VARCHAR2", "NOME": "VARCHAR2"},
-        "PULISCE": {"NUMERO_CAMERA": "NUMBER", "PARTITA_IVA": "VARCHAR2"},
-        "DOCUMENTO": {"CF_PERSONA": "VARCHAR2", "SCADENZA": "DATE", "PARTITA_IVA_ENTE": "VARCHAR2"},
-        "ENTE": {"PARTITA_IVA_ENTE": "VARCHAR2", "ENTE_EROGAZIONE": "VARCHAR2"},
-        "PRENOTAZIONE": {"CODICE_PRENOTAZIONE": "NUMBER", "DESCRIZIONE": "CLOB", "DATA_PRENOTAZIONE": "DATE", "DATA_DIMISSIONE": "DATE", "NUMERO_CAMERA": "NUMBER", "CODICE_FISCALE_TUTORE": "VARCHAR2"},
-        "TURNO_PROGRAMMATO": {"CODICE_FISCALE_MEDICO": "VARCHAR2", "ORA_INIZIO": "VARCHAR2", "ORA_FINE": "VARCHAR2", "GIORNO": "DATE", "FASCIA_ORARIA": "VARCHAR2"},
-        "TURNO_EFFETTUATO": {"CODICE_FISCALE_MEDICO": "VARCHAR2", "GIORNO": "DATE", "FASCIA_ORARIA": "VARCHAR2", "ORA_INIZIO": "VARCHAR2", "ORA_FINE": "VARCHAR2"},
-        "VISITA": {"CODICE_FISCALE_PARENTE": "VARCHAR2", "GIORNO_VISITA": "DATE", "ORA_INGRESSO": "VARCHAR2", "ORA_USCITA": "VARCHAR2", "CODICE_FISCALE_RESIDENTE": "VARCHAR2"},
-        "CONSULENZA": {"CODICE_CONSULENZA": "NUMBER", "DATA_CONSULENZA": "DATE", "NOTE_CONSULENZA": "CLOB"},
-        "RICEVE": {"CODICE_FISCALE_RESIDENTE": "VARCHAR2", "CODICE_CONSULENZA": "NUMBER"},
-        "EFFETTUA": {"CODICE_CONSULENZA": "NUMBER", "CODICE_FISCALE_MEDICO": "VARCHAR2"},
-    }
+    expected_tables = cfg["schema_tables"]
+    sc = cfg["schema"]
+    exclude_patterns = sc["exclude_table_patterns"]
+    owner = sc.get("owner", get_db_owner(cfg))
 
+    exclude_sql = " AND ".join(f"TABLE_NAME NOT LIKE '{p}'" for p in exclude_patterns)
     errors = []
 
-    cur.execute("SELECT TABLE_NAME FROM USER_TABLES WHERE TABLE_NAME NOT LIKE 'SYS_%' AND TABLE_NAME NOT LIKE 'AQ_%' AND TABLE_NAME NOT LIKE 'HELP%' AND TABLE_NAME NOT LIKE 'BIN_%' AND TABLE_NAME NOT LIKE 'MVIEW%'")
+    cur.execute(f"SELECT TABLE_NAME FROM USER_TABLES WHERE {exclude_sql}")
     existing_tables = {row[0] for row in cur.fetchall()}
 
     for table_name in sorted(expected_tables.keys()):
@@ -59,7 +31,7 @@ def verify_schema(password):
             continue
 
         log.info(f"SCHEMA: SELECT COLUMN_NAME, DATA_TYPE FROM ALL_TAB_COLUMNS WHERE TABLE_NAME = '{table_name}'")
-        cur.execute(f"SELECT COLUMN_NAME, DATA_TYPE FROM ALL_TAB_COLUMNS WHERE TABLE_NAME = '{table_name}' AND OWNER = 'SYSTEM'")
+        cur.execute(f"SELECT COLUMN_NAME, DATA_TYPE FROM ALL_TAB_COLUMNS WHERE TABLE_NAME = '{table_name}' AND OWNER = '{owner}'")
         columns = {row[0]: row[1] for row in cur.fetchall()}
         log.info(f"SCHEMA: {table_name} columns found: {list(columns.keys())}")
 
@@ -83,15 +55,17 @@ def verify_schema(password):
         else:
             log.info(f"{table_name} OK {count} records")
 
-    cur.execute("SELECT COUNT(*) FROM USER_TRIGGERS WHERE TRIGGER_NAME LIKE 'TRG_%'")
+    cur.execute(f"SELECT COUNT(*) FROM USER_TRIGGERS WHERE TRIGGER_NAME LIKE '{sc['trigger_name_pattern']}'")
     trg_count = cur.fetchone()[0]
     log.info(f"TRIGGERS FOUND {trg_count}")
 
-    cur.execute("SELECT COUNT(*) FROM USER_OBJECTS WHERE OBJECT_TYPE = 'FUNCTION' AND (OBJECT_NAME LIKE 'CALCOLA%' OR OBJECT_NAME LIKE 'CONTEGGIO%' OR OBJECT_NAME LIKE 'VERIFICA%' OR OBJECT_NAME LIKE 'DESCRIZIONE%')")
+    fn_prefixes = " OR ".join(f"OBJECT_NAME LIKE '{p}'" for p in sc["function_prefix_patterns"])
+    cur.execute(f"SELECT COUNT(*) FROM USER_OBJECTS WHERE OBJECT_TYPE = 'FUNCTION' AND ({fn_prefixes})")
     fn_count = cur.fetchone()[0]
     log.info(f"FUNCTIONS FOUND {fn_count}")
 
-    cur.execute("SELECT COUNT(*) FROM USER_CONSTRAINTS WHERE CONSTRAINT_TYPE IN ('P','R') AND TABLE_NAME NOT LIKE 'SYS_%' AND TABLE_NAME NOT LIKE 'AQ_%' AND TABLE_NAME NOT LIKE 'HELP%' AND TABLE_NAME NOT LIKE 'BIN_%' AND TABLE_NAME NOT LIKE 'MVIEW%'")
+    constraint_types = ",".join(f"'{t}'" for t in sc["constraint_types"])
+    cur.execute(f"SELECT COUNT(*) FROM USER_CONSTRAINTS WHERE CONSTRAINT_TYPE IN ({constraint_types}) AND {exclude_sql}")
     cst_count = cur.fetchone()[0]
     log.info(f"PK/FK CONSTRAINTS {cst_count}")
 

@@ -1,12 +1,13 @@
 import re
 import logging
 import oracledb
+from scripts.utils.config import load_config, get_dsn, get_db_user
 
-logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
 
 def execute_sql(password, sql_file):
-    conn = oracledb.connect(user="system", password=password, dsn="localhost:1521/FREEPDB1")
+    cfg = load_config()
+    conn = oracledb.connect(user=get_db_user(cfg), password=password, dsn=get_dsn(cfg))
     cur = conn.cursor()
 
     with open(sql_file) as f:

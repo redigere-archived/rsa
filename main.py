@@ -1,7 +1,10 @@
 import sys
 import logging
+from scripts.utils.config import load_config
 
-logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
+cfg = load_config()
+log_cfg = cfg["logging"]
+logging.basicConfig(level=getattr(logging, log_cfg["level"]), format=log_cfg["format"])
 log = logging.getLogger(__name__)
 
 def run_all(password):
@@ -10,7 +13,7 @@ def run_all(password):
     from scripts.verify.verify_schema import verify_schema
     from scripts.report.report import generate_report
 
-    for sql_file in ["db/01_ddl.sql", "db/02_dml.sql", "db/03_functions.sql", "db/04_triggers.sql"]:
+    for sql_file in cfg["paths"]["sql_files"]:
         execute_sql(password, sql_file)
 
     verify_records(password)

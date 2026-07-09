@@ -1,26 +1,18 @@
 import sys
 import logging
 import oracledb
+from scripts.utils.config import load_config, get_dsn, get_db_user
 
-logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
 
 def verify_records(password):
-    conn = oracledb.connect(user="system", password=password, dsn="localhost:1521/FREEPDB1")
+    cfg = load_config()
+    conn = oracledb.connect(user=get_db_user(cfg), password=password, dsn=get_dsn(cfg))
     cur = conn.cursor()
 
     log.info("DATA VERIFICATION START")
 
-    tables = [
-        "PERSONA","PERSONALE","PARENTE","TUTORE","OPERATORE","CONTRATTO",
-        "MEDICO","REPARTO","CAMERA","RESIDENTE","MALATTIA","FARMACO",
-        "TRATTAMENTO","SOFFRE","ASSUME","PAI","NECESSITA",
-        "AZIENDA_ESTERNA","DITTA_PULIZIE","DITTA_RISTORANTE","DIETA","FORNISCE","PULISCE",
-        "DOCUMENTO","ENTE","PRENOTAZIONE",
-        "TURNO_PROGRAMMATO","TURNO_EFFETTUATO","VISITA","CONSULENZA",
-        "RICEVE","EFFETTUA"
-    ]
-
+    tables = cfg["tables"]
     total = 0
     empty = []
     for t in tables:

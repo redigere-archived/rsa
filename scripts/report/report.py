@@ -1,24 +1,17 @@
 import logging
 import oracledb
+from scripts.utils.config import load_config, get_dsn, get_db_user
 
-logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
 
 def generate_report(password):
-    conn = oracledb.connect(user="system", password=password, dsn="localhost:1521/FREEPDB1")
+    cfg = load_config()
+    conn = oracledb.connect(user=get_db_user(cfg), password=password, dsn=get_dsn(cfg))
     cur = conn.cursor()
 
     log.info("RSA REPORT DATABASE")
 
-    tables = [
-        "PERSONA","PERSONALE","PARENTE","TUTORE","OPERATORE","CONTRATTO",
-        "MEDICO","REPARTO","CAMERA","RESIDENTE","MALATTIA","FARMACO",
-        "TRATTAMENTO","SOFFRE","ASSUME","PAI","NECESSITA",
-        "AZIENDA_ESTERNA","DITTA_PULIZIE","DITTA_RISTORANTE","DIETA","FORNISCE","PULISCE",
-        "DOCUMENTO","ENTE","PRENOTAZIONE",
-        "TURNO_PROGRAMMATO","TURNO_EFFETTUATO","VISITA","CONSULENZA",
-        "RICEVE","EFFETTUA"
-    ]
+    tables = cfg["tables"]
     total = 0
     for t in tables:
         log.info(f"REPORT: SELECT COUNT(*) FROM {t}")
@@ -29,16 +22,9 @@ def generate_report(password):
         log.info(f"{t} {count}")
     log.info(f"TOTAL {total}")
 
-    funcs = [
-        ("ETA RESIDENTI", "SELECT P.NOME, P.COGNOME, CALCOLA_ETA(R.CODICE_FISCALE) FROM RESIDENTE R JOIN PERSONA P ON R.CODICE_FISCALE = P.CODICE_FISCALE"),
-        ("CAMERE LIBERE", "SELECT NOME_REPARTO, CONTEGGIO_CAMERE_LIBERE(CODICE_REPARTO) FROM REPARTO"),
-        ("FARMACI ASSEGNATI", "SELECT P.NOME, P.COGNOME, CONTEGGIO_FARMACI_ASSEGNATI(R.CODICE_FISCALE) FROM RESIDENTE R JOIN PERSONA P ON R.CODICE_FISCALE = P.CODICE_FISCALE"),
-        ("STIPENDIO MESE", "SELECT P.NOME, P.COGNOME, CALCOLA_STIPENDIO_MENSILE(P.CODICE_FISCALE) FROM PERSONALE PE JOIN PERSONA P ON PE.CODICE_FISCALE = P.CODICE_FISCALE"),
-        ("PAI ATTIVI", "SELECT P.NOME, P.COGNOME, VERIFICA_PAI_ATTIVO(R.CODICE_FISCALE) FROM RESIDENTE R JOIN PERSONA P ON R.CODICE_FISCALE = P.CODICE_FISCALE"),
-        ("ESITO TRATTAMENTI", "SELECT CODICE_TRATTAMENTO, DESCRIZIONE_ESITO_TRATTAMENTO(CODICE_TRATTAMENTO) FROM TRATTAMENTO"),
-        ("NUMERO VISITE", "SELECT P.NOME, P.COGNOME, CONTEGGIO_VISITE_RESIDENTE(R.CODICE_FISCALE, TO_DATE('2025-01-01','YYYY-MM-DD'), TO_DATE('2025-12-31','YYYY-MM-DD')) FROM RESIDENTE R JOIN PERSONA P ON R.CODICE_FISCALE = P.CODICE_FISCALE"),
-    ]
-    for title, sql in funcs:
+    for entry in cfg["reports"]["queries"]:
+        title = entry["name"]
+        sql = entry["sql"]
         log.info(f"REPORT: executing function query - {title}")
         log.info(f"REPORT: SQL: {sql[:200]}")
         try:
@@ -50,7 +36,8 @@ def generate_report(password):
         except Exception as e:
             log.error(f"{title} Error {e}")
 
-    cur.execute("SELECT TRIGGER_NAME, TABLE_NAME, STATUS FROM USER_TRIGGERS WHERE TRIGGER_NAME LIKE 'TRG_%' ORDER BY TABLE_NAME")
+    trg_pattern = cfg["schema"]["trigger_name_pattern"]
+    cur.execute(f"SELECT TRIGGER_NAME, TABLE_NAME, STATUS FROM USER_TRIGGERS WHERE TRIGGER_NAME LIKE '{trg_pattern}' ORDER BY TABLE_NAME")
     for name, table, status in cur.fetchall():
         log.info(f"TRIGGER {name} {table} {status}")
 

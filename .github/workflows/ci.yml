@@ -13,7 +13,7 @@ permissions:
   contents: write
 
 env:
-  ORACLE_PWD: rsa_password_2025
+  ORACLE_PWD: ${{ secrets.ORACLE_PWD }}
 
 jobs:
   signoff:
@@ -34,7 +34,7 @@ jobs:
           fetch-depth: 0
       - name: Start Oracle
         run: docker run -d --name oracle-xe -e ORACLE_PASSWORD=${{ env.ORACLE_PWD }} -p 1521:1521 gvenzl/oracle-free:23-slim
-      - run: pip install oracledb
+      - run: pip install oracledb pyyaml
       - name: Wait for Oracle
         run: python3 main.py wait "${{ env.ORACLE_PWD }}"
 
