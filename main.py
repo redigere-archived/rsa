@@ -42,5 +42,8 @@ if __name__ == "__main__":
     elif command == "report":
         from scripts.report.report import generate_report
         generate_report(password)
+    elif command == "dump":
+        from scripts.utils.generate_dump import generate_dump
+        generate_dump()
     elif command == "all":
         run_all(password)
